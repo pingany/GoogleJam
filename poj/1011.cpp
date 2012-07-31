@@ -38,14 +38,14 @@ T sumn(T*start, T*end)
 	}
 	return result;
 }
-
-bool trysolve(int len, int first);
+INLINE int findNext(int k);
 
 int N;
 int sumlen;
 int maxlen;
 int sticks[65];
 bool used[65];
+int unitlen;
 
 bool greater1(int i, int j)
 {
@@ -62,14 +62,43 @@ INLINE int findUnused(int start)
 	return N;
 }
 
-bool solve(int totallen)
+bool solve(int totallen, int leftunit, int first)
 {
-	int len = totallen;
-	int first = findUnused(0);
-	ASSERT(first < N);
-	used[first] = true;
-	len -= sticks[first];
-	return trysolve(len, first+1);
+	ASSERT(totallen >= unitlen && leftunit % unitlen == totallen % unitlen);
+	if(totallen == unitlen)
+		return true;
+	if(leftunit == 0)
+		leftunit = unitlen;
+	if(leftunit == unitlen)
+	{
+		first = findUnused(0);
+		used[first] = true;
+		bool result = solve(totallen - sticks[first], leftunit - sticks[first], findUnused(first+1));
+		if(result)
+			return result;		
+		used[first] = false;
+	}
+	else
+	{
+		for(int i = first; i < N;)
+		{
+			if(sticks[i] > leftunit)
+			{
+				i = findNext(i);
+				continue;
+			}
+			else
+			{
+				used[i] = true;
+				bool result = solve(totallen - sticks[i], leftunit - sticks[i], findUnused(i+1));
+				if(result)
+					return true;
+				used[i] = false;
+				i = findNext(i);
+			}
+		}
+	}
+	return false;
 }
 
 INLINE int findNext(int k)
@@ -82,32 +111,6 @@ INLINE int findNext(int k)
 	return N;
 }
 
-bool trysolve(int len, int first)
-{
-	ASSERT(len >= 0);
-	if(len == 0)
-		return true;
-	if(first >= N)
-		return false;
-	for(int i = findUnused(first); i < N;)
-	{
-		int k = i;
-		if(sticks[k] >len)
-		{
-			i = findNext(k);
-			continue;
-		}
-		else
-		{
-			used[k] = true;
-			if(trysolve(len - sticks[k], k+1))
-				return true;
-			used[k] = false;
-			i = findNext(k);
-		}
-	}
-	return false;
-}
 
 bool testcase()
 {
@@ -126,16 +129,8 @@ bool testcase()
 		if (sumlen % len != 0)
 			continue;
 		memset(used, 0, sizeof(used));
-		int n = sumlen/len - 1;
-		bool ok = true;
-		while(n--)
-		{
-			if(!solve(len))
-			{
-				ok = false;
-				break;
-			}
-		}
+		unitlen = len;
+		bool ok = solve(sumlen, unitlen, 0);
 		if(ok)
 		{
 			result = len;
