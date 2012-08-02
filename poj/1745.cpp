@@ -50,7 +50,21 @@ T sumn(T*start, T*end)
 int N, K;
 int d[MAXN+1];
 int first;
-bool f[MAXN+1][MAXK+1];
+struct Data
+{
+	int times;
+	int data;
+};
+Data datas[MAXK+1];
+int dataNumber;
+bool f[MAXK+1][MAXK+1];
+bool modable[MAXK+1][MAXK+1];
+int times[MAXK+1];
+Data makeData(int t, int d)
+{
+	Data data = {t, d};
+	return data;
+}
 
 int mod(int x, int y)
 {
@@ -73,40 +87,55 @@ void solve()
 		cout << result(first == 0);
 		return;
 	}
-	int realN = 0;
+	memset(times, 0, sizeof(times));
 	forn(i, 0, N)
 	{
 		d[i] = mod(d[i], K);
-		//Don't consider the data who mod K to 0
-		if(d[i] != 0)
-			d[realN++] = d[i];
+		times[d[i]]++;
 	}
-	N =realN;
-	#ifdef LOCAL
-	forn(i, 0, N)
-		cout << " " << d[i];
-	cout << "\n"; 
-	#endif
-	memset(f, 0,sizeof(f));
-	for(int i = N-1; i>= 0; i--)
+	//Don't consider the data who mod K to 0
+	dataNumber = 0;
+	forn(i, 1, K)
 	{
-		forn(k, 0, K)
+		if(times[i])
 		{
-			int t = d[i];
-			if(i == N-1)
+			datas[dataNumber++] = makeData(times[i], i);
+		}
+	}
+
+	memset(modable, 0, sizeof(modable));
+	memset(f, 0,sizeof(f));
+	for(int i = dataNumber - 1; i >= 0; i--)
+		{
+			forn(x, 0, datas[i].times+1)
 			{
-				f[i][k] = (t == k);
+				// x means number of "+", then k is the mod of sum of x "+"s and (n-x) "-"s
+				//k = (x * data - (n-x)*data)% K
+				int k = mod((2* x - datas[i].times)*datas[i].data, K);
+				modable[i][k] = true;
 			}
-			else
+		}
+
+	for(int k = 0; k < K; k++)
+			f[dataNumber-1][k] = modable[dataNumber-1][k];
+
+	for(int i = dataNumber - 2; i >= 0; i--)
+			for(int k = 0; k < K; k++)
+		{
+			bool possible = false;
+			forn(x, 0, K)
 			{
-				f[i][k] = f[i+1][(t+k)%K] || f[i+1][(k-t+K)%K];
+				possible = (modable[i][x] && (f[i+1][(x+k)%K] || f[i+1][(k-x+K)%K]));
+				if(possible)
+					break;
 			}
+			f[i][k] = possible;
 			#ifdef LOCAL
 			printf("f[%d][%d] :%d\n",  i, k, f[i][k]);
 			#endif
 		}
-	}
-	cout << result(f[0][first] || f[0][(K-first)%K] ) ;
+
+		cout << result(f[0][first] || f[0][(K-first)%K] ) ;
 }
 
 bool testcase()
