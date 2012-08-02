@@ -50,20 +50,7 @@ T sumn(T*start, T*end)
 int N, K;
 int d[MAXN+1];
 int first;
-struct Data
-{
-	int times;
-	int data;
-};
-Data datas[MAXK+1];
-int dataNumber;
-bool f[MAXK+1][MAXK+1][MAXK+1];
-int times[MAXK+1];
-Data makeData(int t, int d)
-{
-	Data data = {t, d};
-	return data;
-}
+bool f[MAXN+1][MAXK+1];
 
 int mod(int x, int y)
 {
@@ -86,60 +73,40 @@ void solve()
 		cout << result(first == 0);
 		return;
 	}
-	memset(times, 0, sizeof(times));
+	int realN = 0;
 	forn(i, 0, N)
 	{
 		d[i] = mod(d[i], K);
-		times[d[i]]++;
+		//Don't consider the data who mod K to 0
+		if(d[i] != 0)
+			d[realN++] = d[i];
 	}
-	//Don't consider the data who mod K to 0
-	dataNumber = 0;
-	forn(i, 1, K)
-	{
-		if(times[i])
-		{
-			datas[dataNumber++] = makeData(times[i], i);
-		}
-	}
-
+	N =realN;
+	#ifdef LOCAL
+	forn(i, 0, N)
+		cout << " " << d[i];
+	cout << "\n"; 
+	#endif
 	memset(f, 0,sizeof(f));
-	for(int i = dataNumber - 1; i >= 0; i--)
+	for(int i = N-1; i>= 0; i--)
+	{
+		forn(k, 0, K)
 		{
-			forn(x, 0, datas[i].times+1)
+			int t = d[i];
+			if(i == N-1)
 			{
-				// x means number of "+", then k is the mod of sum of x "+"s and (n-x) "-"s
-				//k = (x * data - (n-x)*data)% K
-				int k = mod((2* x - datas[i].times)*datas[i].data, K);
-				f[i][i][k] = true;
+				f[i][k] = (t == k);
 			}
-		}
-	for(int i = dataNumber - 1; i >= 0; i--)
-		for(int j = i+1; j < dataNumber; j++)
-			for(int k = 0; k < K; k++)
-		{
-			bool possible = false;
-			ASSERT(i != j);
-			forn(x, i, j)
+			else
 			{
-				forn(y, 0, K)
-				{
-					possible = (f[i][x][y] && f[x+1][j][(k+y)%K]) || (f[i][x][y] && f[x+1][j][(K+ k-y)%K]);
-					if(possible)
-					{
-						x = j+1;
-						break;
-					}
-				}
+				f[i][k] = f[i+1][(t+k)%K] || f[i+1][(k-t+K)%K];
 			}
-			f[i][j][k] = possible;
 			#ifdef LOCAL
-			forn(z, i, j+1)
-				cout  << datas[z].data << " ";
-			printf(" k=%d, possible:%d\n", k, possible);
+			printf("f[%d][%d] :%d\n",  i, k, f[i][k]);
 			#endif
 		}
-
-		cout << result(f[0][dataNumber-1][first] || f[0][dataNumber-1][(K-first)%K] ) ;
+	}
+	cout << result(f[0][first] || f[0][(K-first)%K] ) ;
 }
 
 bool testcase()
