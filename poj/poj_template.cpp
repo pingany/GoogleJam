@@ -12,7 +12,7 @@ using namespace std;
 #define ASSERT(x)
 #endif
 
-#define forn(i, a, b) for(int i = a; i < b; i++)
+#define forn(i, a, b) for(int i = (a); i < (b); i++)
 #define uint unsigned int
 template<typename T>
 T maxn(T* start, T*end)
