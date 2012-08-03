@@ -76,6 +76,8 @@ inline int getInt(State s)
 }
 #define f(h, s1, s2)  f[h][index[getInt(s1)]][index[getInt(s2)]]
 
+// get the max number from the line h, 
+// with line (h-1) state as s1, and line (h-2) state as s2
 int solve(int h, State s1, State s2)
 {
 	if( h == N)
@@ -87,6 +89,7 @@ int solve(int h, State s1, State s2)
 	LineState st2 = states(s2);
 	// Put nothing
 	r = solve(h+1, EMPTY_STATE, s1);
+	//A line can at most be put 4 (ROUND_UP(10.0/3)) batteries, enumerate the possible places of them
 	forn(i, 0, M)
 	{
 		if(!canput(h, i, st1, st2))
