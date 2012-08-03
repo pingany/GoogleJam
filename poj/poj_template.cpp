@@ -15,33 +15,6 @@ using namespace std;
 #define MAX_INT 0x7fffffffL
 #define forn(i, a, b) for(int i = (a); i < (b); i++)
 #define uint unsigned int
-template<typename T>
-T maxn(T* start, T*end)
-{
-	ASSERT(start != end);
-	T result = *start;
-	++start;
-	while(start != end)
-	{
-		if(*start > result)
-			result = *start;
-		start++;
-	}
-	return result;
-}
-
-template<typename T>
-T sumn(T*start, T*end)
-{
-	T result = T(0);
-	while(start != end)
-	{
-		result += *start;
-		start++;
-	}
-	return result;
-}
-
 bool testcase()
 {
 	cin >> n;
@@ -55,11 +28,11 @@ int main()
 {
 	
 	ASSERT(freopen("in.txt", "r",stdin));
-	#ifdef LOCAL
+#ifdef LOCAL
 	while(testcase())
-		cout << "endl";
-	#else
+		cout << endl;
+#else
 	testcase();
-	#endif
+#endif
 	return 0;
 }
