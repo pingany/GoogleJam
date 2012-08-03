@@ -89,11 +89,11 @@ int main()
 		cin >> n >> t;
 		t--;
 		memset(E, 0, sizeof(E));
-		forn(i, 0, MAXN)
+		forn(i, 0, n)
 			E[i][i] = 1;
 
 		names.clear();
-		memset(init, 0, sizeof(0));
+		memset(init, 0, sizeof(init));
 		memset(A, 0, sizeof(A));
 		string name;
 		forn(i, 0, n)
