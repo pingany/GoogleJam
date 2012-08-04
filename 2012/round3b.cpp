@@ -13,6 +13,7 @@ char vis[MAXS*2][MAXS*2];
 int S;
 int edgesVisited[7];
 int corners, edges, ring;
+int stopVisiting = 0;
 void init()
 {
 	memset(board, 0, sizeof(board));
@@ -20,6 +21,8 @@ void init()
 
 #define filled(x, y)   board[x][y]
 #define visited(x, y)  vis[x][y]
+
+typedef void (*VisitFunc)(int x, int y);
 
 INLINE bool valid(int x, int y)
 {
@@ -54,13 +57,10 @@ INLINE int getEdge(int x, int y)
 #define EDGE 2
 #define RING 4
 
-void visit(int x, int y)
+void visitForBridgeOrFork(int x, int y)
 {
-	if (vis[x][y])
-	{
-		// ring = 1;
-		return;
-	}
+	ASSERT(!stopVisiting);
+	ASSERT (!vis[x][y]);
 	int edgeType = 0;
 	vis[x][y] = 1;
 	if (isCorner(x, y))
@@ -77,6 +77,17 @@ void visit(int x, int y)
 	}
 }
 
+void visitForRing(int x, int y)
+{
+	ASSERT(!stopVisiting);
+	ASSERT(!visited(x, y));
+	vis[x][y] = 1;
+	if(0 != getEdge(x, y))
+	{
+		ring = 0;
+		stopVisiting = 1;
+	}
+}
 struct Nb
 {
 	int x, y;
@@ -90,9 +101,9 @@ const Nb nbs[6] = {
 	{1, 0}
 };
 
-void bfs(int x, int y)
+void bfs(int x, int y, int visitFilled, VisitFunc visitFunc)
 {
-	ASSERT(filled(x, y) && visited(x, y));
+	ASSERT(filled(x, y) == visitFilled && visited(x, y));
 	int nx, ny;
 	int unvisitedCount = 0;
 	Nb unvisited[6];
@@ -100,35 +111,68 @@ void bfs(int x, int y)
 	{
 		nx = x + nbs[i].x;
 		ny = y + nbs[i].y;
-		if (filled(nx, ny))
+		if (filled(nx, ny) == visitFilled)
 		{
 			if (!vis[nx][ny])
+			{
 				unvisited[unvisitedCount++] = nbs[i];
-			visit(nx, ny);
+				visitFunc(nx, ny);
+				if(stopVisiting)
+					return;
+			}
 		}
 	}
 	for(int i = 0; i< unvisitedCount; i++)
 	{
 		nx = x + unvisited[i].x;
 		ny = y + unvisited[i].y;
-		bfs(nx, ny);
+		bfs(nx, ny, visitFilled, visitFunc);
+		if(stopVisiting)
+			return;
 	}
 }
 
-int resolve(int x, int y)
+int findBridgeOrFork(int x, int y)
 {
 	corners = 0 ;
 	edges = 0;
-	ring = 0;
+	stopVisiting = 0;
 	memset(edgesVisited, 0, sizeof(edgesVisited));
 	memset(vis, 0, sizeof(vis));
-	visit(x, y);
-	bfs(x, y);
+	visitForBridgeOrFork(x, y);
+	if(!stopVisiting)
+		bfs(x, y, 1, visitForBridgeOrFork);
 	int result = 0;
 	if (corners >= 2)
 		result |= CORNER;
 	if( edges >= 3)
 		result |= EDGE;
+	return result;
+}
+
+int findRing(int x, int y)
+{
+	ring = 0;
+	memset(vis, 0, sizeof(vis));
+	int nx, ny;
+	for(int i = 0; i< 6; i++)
+	{
+		nx = x + nbs[i].x;
+		ny = y + nbs[i].y;
+		if (!filled(nx, ny) && !visited(nx, ny))
+		{
+			// Maybe we have ring
+			ring = 1;
+			stopVisiting = 0;
+			visitForRing(nx, ny);
+			if (!stopVisiting)
+				// visit board for unfilled stone, if (nx, ny) can reach the Edge, then it is not encircled
+				bfs(nx, ny, 0, visitForRing);
+			if (ring)
+				break;
+		}
+	}
+	int result = 0;
 	if(ring)
 		result |= RING;
 	return result;
@@ -155,7 +199,7 @@ int main()
 				continue;
 			move++;
 			board[x][y] = 1;
-			result = resolve(x, y);
+			result = findBridgeOrFork(x, y) | findRing(x, y);
 		}
 		printf("Case #%d: ", caseIndex);
 		caseIndex ++;

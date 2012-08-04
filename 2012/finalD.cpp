@@ -3,7 +3,7 @@
 using namespace std;
 
 #define ASSERT(x)	do{if(!(x)) __asm{int 3};}while(0)
-#define MAXN (40)
+#define MAXN (10)
 #define MAX_STATE (1ULL << (MAXN+1))
 
 typedef unsigned __int64 uint64;
