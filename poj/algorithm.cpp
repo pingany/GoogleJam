@@ -25,3 +25,18 @@ T sumn(T*start, T*end)
 	}
 	return result;
 }
+
+// Make a graph to a tree with startNode as root
+void toRootTree(int startNode)
+{
+	Node &node = nodes[startNode];
+	for (Node::iterator i = node.begin(); i != node.end(); ++i)
+	{
+		Node & child = nodes[*i];
+		child.erase(find(child.begin(), child.end(), startNode));
+	}
+	for (Node::iterator i = node.begin(); i != node.end(); ++i)
+	{
+		toRootTree(*i);
+	}
+}

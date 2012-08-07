@@ -3,10 +3,11 @@
 #include <string.h>
 #include <iostream>
 #include <algorithm>
+#include <vector>
 using namespace std;
 
 #define INLINE inline
-#ifdef _MSC_VER
+#ifdef LOCAL
 #define ASSERT(x)	do{if(!(x)) __asm{int 3};}while(0)
 #else
 #define ASSERT(x)
@@ -14,6 +15,8 @@ using namespace std;
 
 #define MAX_INT 0x7fffffffL
 #define forn(i, a, b) for(int i = (a); i < (b); i++)
+#define forn2(i, a, b) for(int i = (a); i > (b); i--)
+typedef unsigned long long LONG;
 #define uint unsigned int
 bool testcase()
 {
