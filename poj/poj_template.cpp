@@ -33,7 +33,7 @@ int main()
 	ASSERT(freopen("in.txt", "r",stdin));
 #ifdef LOCAL
 	while(testcase())
-		cout << endl;
+		cout << "\n";
 #else
 	testcase();
 #endif
