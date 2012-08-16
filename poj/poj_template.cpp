@@ -8,7 +8,7 @@ using namespace std;
 
 #define INLINE inline
 #ifdef LOCAL
-#define ASSERT(x)	do{if(!(x)) __asm{int 3};}while(0)
+#define ASSERT(x)	{if(!(x)) __asm{int 3};}
 #else
 #define ASSERT(x)
 #endif
