@@ -22,41 +22,29 @@ using namespace std;
 #define forn2(i, a, b) for(int i = (a); i > (b); i--)
 typedef unsigned long long LONG;
 #define uint unsigned int
+// People currently in the room
 set<int> peoplesIn;
-map<int, set<int>> candidateNames;
+
+// the candidate names for a userID
+map<int, set<int> > candidateNames;
 
 #define MAXN 20
+// Index of userIDString and name
 map<string, int> userIndexs, nameIndexs;
+// Save the userIdString and names from indexes
 string names[MAXN+1], userNames[MAXN+1];
 
+// the matched nameID of userID
 int result[MAXN+1];
+// indicate if a name matched
 bool nameMatched[MAXN+1];
+// the number of users
 int n;
 
+// the graph, converted from candidateNames
+std::vector<int> nodes[MAXN+1];
+
 #define INVALID_VALUE (-1)
-
-struct Graph
-{
-	std::vector<std::vector<int>> vertices;
-};
-
-void interect(set<int>&a, const set<int>&b)
-{
-	for (std::set<int>::iterator i = a.begin(); i != a.end();)
-	{
-		if(b.find(*i) == b.end())
-			i = a.erase(i);
-		else 
-			++i;
-	}
-}
-
-void addResult(int uid, int nameid)
-{
-	result[uid] = nameid;
-	nameMatched[nameid] = true;
-	peoplesIn.erase(nameid);
-}
 
 struct Output
 {
@@ -70,7 +58,39 @@ struct Output
 	}
 };
 
-std::vector<int> nodes[MAXN+1];
+void interect(set<int>&a, const set<int>&b)
+{
+	for (std::set<int>::iterator i = a.begin(); i != a.end();)
+	{
+		if(b.find(*i) == b.end())
+			i = a.erase(i);
+		else 
+			++i;
+	}
+}
+
+// When do a match in graph, uid must match nameid, then do the match, and remove all related edges
+void fixPair(int uid, int nameid)
+{
+	result[uid] = nameid;
+	nameMatched[nameid] = true;
+	nodes[uid].clear();
+	forn(i, 1, n+1)
+	{
+		if(!nodes[i].empty())
+		{
+			std::vector<int>::iterator it = find(nodes[i].begin(), nodes[i].end(), nameid);
+			if (it != nodes[i].end())
+			{
+				nodes[i].erase(it);
+				if(nodes[i].size() == 1)
+					fixPair(i, *nodes[i].begin());
+			}
+		}
+	}
+}
+
+// Get the max match for a di-graph, XiongYaLi algorithm
 bool visit[MAXN+1];
 int theMatchingLeft[MAXN+1];
 // depend on theMatchingLeft, visit
@@ -128,6 +148,12 @@ bool testcase()
 	int uniqNameId = 1;
 	memset(result, 0xff, sizeof(result));
 	memset(nameMatched, 0,sizeof(nameMatched));
+	forn(i, 1, n+1)
+	{
+		set<int>&candidates = candidateNames[i];
+		forn(j, 1, n+1)
+			candidates.insert(j);
+	}
 	char action;
 	while(cin >> action, action != 'Q')
 	{
@@ -135,46 +161,8 @@ bool testcase()
 		{
 			cin >> userIdString;
 			int uid = userIndexs[userIdString];
-			if(result[uid] != INVALID_VALUE)
-				continue;
 			set<int>&candidates = candidateNames[uid];
-			if(candidates.empty())
-			{
-				candidates = peoplesIn;
-			}
-			else
-			{
-				interect(candidates, peoplesIn);
-			}
-			if(candidates.size() == 1)
-			{
-				int nameid =  *candidates.begin();
-				ASSERT(result[uid] == INVALID_VALUE);
-				addResult(uid, nameid);
-				candidateNames.erase(candidateNames.find(uid));
-				queue<int> removeNames;
-				removeNames.push(nameid);
-				while(!removeNames.empty())
-				{
-					int nameid = removeNames.front();
-					removeNames.pop();
-					for (std::map<int, set<int>>::iterator i = candidateNames.begin();
-					 i != candidateNames.end();)
-					{
-						i->second.erase(nameid);
-						if(i->second.size() == 1)
-						{
-							int nameid = *(i->second.begin());
-							ASSERT(result[i->first] == INVALID_VALUE);
-							addResult(i->first, nameid);
-							removeNames.push(nameid);
-							i = candidateNames.erase(i);
-						}
-						else 
-							++i;
-					}
-				}
-			}
+			interect(candidates, peoplesIn);
 		}
 		else
 		{
@@ -185,8 +173,6 @@ bool testcase()
 				nameid = uniqNameId++;
 				names[nameid] = name;
 			}
-			if(nameMatched[nameid])
-				continue;
 			if(action == 'E')
 				peoplesIn.insert(nameid);
 			else
@@ -194,10 +180,10 @@ bool testcase()
 		}
 	}
 
-	////
+	//// Convert to a Graph
 	forn(i, 1, n+1)
 		nodes[i].clear();
-	for (std::map<int, set<int>>::iterator i = candidateNames.begin();
+	for (std::map<int, set<int> >::iterator i = candidateNames.begin();
 					 i != candidateNames.end(); ++i)
 	{
 		set<int>& condidates = i->second;
@@ -205,6 +191,13 @@ bool testcase()
 		{
 			nodes[i->first].push_back(*j);
 		}
+	}
+
+	// Get the perfect match of this graph
+	forn(i, 1, n+1)
+	{
+		if(nodes[i].size() == 1)
+			fixPair(i, *nodes[i].begin());
 	}
 	int maxMatch = getMaxMatch();
 	forn(i, 1, n+1)
@@ -217,13 +210,15 @@ bool testcase()
 			int currentMaxMatch = getMaxMatch();
 			if(currentMaxMatch < maxMatch)
 			{
-				result[i] = x;
-				nameMatched[x] = true;
+				j = node.insert(j, x);
+				fixPair(i, x);
+				maxMatch = getMaxMatch();
+				break;
 			}
 			j = node.insert(j, x);
 		}
 	}
-	////
+	//// Output
 	std::vector<Output> outputs;
 	forn(i, 1, n+1)
 	{
