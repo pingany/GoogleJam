@@ -26,6 +26,18 @@ T sumn(T*start, T*end)
 	return result;
 }
 
+template<class T>
+void reverse(T *s, int len)
+{
+	T*p = s+len-1;
+	while(s < p)
+	{
+		swap(*s, *p);
+		--p;
+		++s;
+	}
+}
+
 // Make a graph to a tree with startNode as root
 void toRootTree(int startNode)
 {
@@ -154,4 +166,43 @@ void solve()
 			nodeMap[nodes[j]->index] = nodes[j];
 		}
 	}
+}
+
+// Max match for digraph
+bool visit[MAX_NODES+1];
+int theMatchingLeft[MAX_NODES+1];
+// depend on theMatchingLeft, visit
+bool findAugment(Node* nodes, int start)
+{
+	for (std::vector<int>::iterator it = nodes[start].begin();
+		 it != nodes[start].end(); ++it)
+	{
+		int i = *it;
+		if(!visit[i])
+		{
+			visit[i] = true;
+			if(theMatchingLeft[i] == -1 || findAugment(nodes, theMatchingLeft[i]))
+			{
+				theMatchingLeft[i] = start;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+int getMaxMatch(Node* nodes, int leftNodeStart, int leftNodeEnd)
+{
+	int ret = 0;
+	memset(theMatchingLeft, 0xff, sizeof(theMatchingLeft));
+	forn(i, leftNodeStart, leftNodeEnd)
+	{
+		if(!nodes[i].empty())
+		{
+			memset(visit, 0, sizeof(visit));
+			if(findAugment(nodes, i))
+				ret++;
+		}
+	}
+	return ret;
 }
