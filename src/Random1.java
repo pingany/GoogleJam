@@ -4,15 +4,58 @@ public class Random1 {
     public static void main(String[] args) {
         int n = 100;
         while (n-- > 0) {
-            r2(100 - 7, 7);
+            r3(100, 7);
             System.out.println("");
         }
     }
 
+    static void r3(int x, int n) {
+        x -= n;
+        while (n > 0) {
+            x = rNormal(x, n);
+            n--;
+        }
+    }
+
     static void r2(int x, int n) {
-        int left = r(x, n);
+        int left = rNormal(x, n);
         if (left != 0)
             r2(left, n - 1);
+    }
+
+    static int rNormal(int total, int n) {
+        if (total == 0) {
+            System.out.print(" "+ 1);
+            return 0;
+        }
+        if (n == 1) {
+            System.out.print(" " + (total + 1));
+            return 0;
+        }
+        double generated = new Random().nextGaussian();
+        double avg = (total+0.0)/n;
+        int res = adjust(total, avg, generated);
+        print(res);
+        return total - res;
+    }
+
+    static int adjust(int total, double avg, double generated) {
+        int res;
+        if (generated > 0) {
+            res = (int)(avg + generated * avg);
+        } else {
+            res = (int)(avg + generated * (avg/3));
+        }
+        res = Math.max(0, Math.min(res, total));
+        return res;
+    }
+
+    static int print(double x) {
+        int d = ((int)x);
+        if (d < 0)
+            d = 0;
+        System.out.print(" " + (d + 1));
+        return d;
     }
 
     static int r(int x, int n) {
